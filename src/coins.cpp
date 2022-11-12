@@ -14,8 +14,6 @@ uint256 CCoinsView::GetBestBlock() const { return uint256(); }
 std::vector<uint256> CCoinsView::GetHeadBlocks() const { return std::vector<uint256>(); }
 bool CCoinsView::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) { return false; }
 std::unique_ptr<CCoinsViewCursor> CCoinsView::Cursor() const { return nullptr; }
-// ELEMENTS:
-bool CCoinsView::IsPeginSpent(const std::pair<uint256, COutPoint> &outpoint) const { return false; }
 
 bool CCoinsView::HaveCoin(const COutPoint &outpoint) const
 {
@@ -33,7 +31,6 @@ bool CCoinsViewBacked::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock)
 std::unique_ptr<CCoinsViewCursor> CCoinsViewBacked::Cursor() const { return base->Cursor(); }
 size_t CCoinsViewBacked::EstimateSize() const { return base->EstimateSize(); }
 // ELEMENTS:
-bool CCoinsViewBacked::IsPeginSpent(const std::pair<uint256, COutPoint> &outpoint) const { return base->IsPeginSpent(outpoint); }
 
 CCoinsViewCache::CCoinsViewCache(CCoinsView *baseIn) : CCoinsViewBacked(baseIn), cachedCoinsUsage(0) {}
 
@@ -175,55 +172,6 @@ bool CCoinsViewCache::HaveCoinInCache(const COutPoint &outpoint) const {
     return (it != cacheCoins.end() && !it->second.coin.IsSpent());
 }
 
-//
-// ELEMENTS:
-
-bool CCoinsViewCache::IsPeginSpent(const std::pair<uint256, COutPoint> &outpoint) const {
-    assert(!outpoint.second.hash.IsNull());
-    assert(!outpoint.first.IsNull());
-
-    CCoinsMap::iterator it = cacheCoins.find(outpoint);
-    if (it == cacheCoins.end()) {
-        bool inserted;
-        std::tie(it, inserted) = cacheCoins.emplace(std::piecewise_construct,
-                std::forward_as_tuple(outpoint), std::tuple<>());
-        it->second.peginSpent = base->IsPeginSpent(outpoint);
-        it->second.flags |= CCoinsCacheEntry::PEGIN;
-        if (!it->second.peginSpent)
-            it->second.flags |= CCoinsCacheEntry::FRESH;
-    }
-    return it->second.peginSpent;
-}
-
-void CCoinsViewCache::SetPeginSpent(const std::pair<uint256, COutPoint> &outpoint, bool fSpent) {
-    assert(!outpoint.second.hash.IsNull());
-    assert(!outpoint.first.IsNull());
-
-    CCoinsMap::iterator it = cacheCoins.find(outpoint);
-
-    bool hadSpent;
-    if (it == cacheCoins.end())
-        hadSpent = base->IsPeginSpent(outpoint);
-    else
-        hadSpent = it->second.peginSpent;
-
-    // If we aren't changing spentness, don't do anything at all
-    if (hadSpent == fSpent)
-        return;
-
-    if (it == cacheCoins.end()) {
-        bool inserted;
-        std::tie(it, inserted) = cacheCoins.emplace(std::piecewise_construct,
-                std::forward_as_tuple(outpoint), std::tuple<>());
-        if (!hadSpent)
-            it->second.flags = CCoinsCacheEntry::FRESH;
-    }
-    it->second.peginSpent = fSpent;
-    it->second.flags |= CCoinsCacheEntry::PEGIN | CCoinsCacheEntry::DIRTY;
-}
-
-// END ELEMENTS
-//
 
 uint256 CCoinsViewCache::GetBestBlock() const {
     if (hashBlock.IsNull())
