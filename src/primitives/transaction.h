@@ -135,7 +135,7 @@ public:
     explicit CTxIn(COutPoint prevoutIn, CScript scriptSigIn=CScript(), uint32_t nSequenceIn=SEQUENCE_FINAL);
     CTxIn(uint256 hashPrevTx, uint32_t nOut, CScript scriptSigIn=CScript(), uint32_t nSequenceIn=SEQUENCE_FINAL);
 
-    // ELEMENTS: explicit serialization methods for selective asset/pegin encoding
+    // ELEMENTS: explicit serialization methods for selective asset encoding
     template <typename Stream>
     inline void Serialize(Stream& s) const {
         bool fHasAssetIssuance;
@@ -146,8 +146,8 @@ public:
             fHasAssetIssuance = false;
             outpoint = prevout;
         } else {
-            // The issuance and pegin bits can't be set as it is used to indicate
-            // the presence of the asset issuance or pegin objects. They should
+            // The issuance bits can't be set as it is used to indicate
+            // the presence of the asset issuance  objects. They should
             // never be set anyway as that would require a parent
             // transaction with over one billion outputs.
             assert(!(prevout.n & ~COutPoint::OUTPOINT_INDEX_MASK));
@@ -447,11 +447,7 @@ inline void SerializeTransaction(const TxType& tx, Stream& s) {
             const_cast<CTxWitness*>(&tx.witness)->vtxoutwit.resize(tx.vout.size());
             for (size_t i = 0; i < tx.vin.size(); i++) {
                 s << tx.witness.vtxinwit[i].scriptWitness.stack;
-                // ELEMENTS:
-                if (tx.vin[i].m_is_pegin) {
-                    s << tx.witness.vtxinwit[i].m_pegin_witness.stack;
-                }
-            }
+                   }
         }
         s << tx.nLockTime;
     }
