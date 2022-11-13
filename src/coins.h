@@ -241,9 +241,6 @@ public:
     std::unique_ptr<CCoinsViewCursor> Cursor() const override {
         throw std::logic_error("CCoinsViewCache cursor iteration not supported.");
     }
-    // ELEMENTS:
-    bool IsPeginSpent(const std::pair<uint256, COutPoint> &outpoint) const override;
-    void SetPeginSpent(const std::pair<uint256, COutPoint> &outpoint, bool fSpent);
 
     /**
      * Check if we have the given utxo already loaded in this cache.
