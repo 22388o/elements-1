@@ -384,11 +384,7 @@ inline void UnserializeTransaction(TxType& tx, Stream& s) {
             tx.witness.vtxoutwit.resize(tx.vout.size());
             for (size_t i = 0; i < tx.vin.size(); i++) {
                 s >> tx.witness.vtxinwit[i].scriptWitness.stack;
-                // ELEMENTS:
-                if (tx.vin[i].m_is_pegin) {
-                    s >> tx.witness.vtxinwit[i].m_pegin_witness.stack;
                 }
-            }
 
             if (!tx.HasWitness()) {
                 /* It's illegal to encode witnesses when all witness stacks are empty. */
