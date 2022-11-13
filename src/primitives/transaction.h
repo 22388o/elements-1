@@ -42,9 +42,6 @@ public:
      * CAssetIssuance object. */
     static const uint32_t OUTPOINT_ISSUANCE_FLAG = (1 << 31);
 
-    /* If this flag is set, the CTxIn including this COutPoint
-     * is a peg-in input. */
-    static const uint32_t OUTPOINT_PEGIN_FLAG = (1 << 30);
 
     /* The inverse of the combination of the preceding flags. Used to
      * extract the original meaning of `n` as the index into the
@@ -99,9 +96,6 @@ public:
 
     CAssetIssuance assetIssuance;
 
-    /* If this is set to true, the input is interpreted as a
-     * peg-in claim and processed as such */
-    bool m_is_pegin = false;
 
     // END ELEMENTS
     //
@@ -168,9 +162,6 @@ public:
             if (fHasAssetIssuance) {
                 outpoint.n |= COutPoint::OUTPOINT_ISSUANCE_FLAG;
             }
-            if (m_is_pegin) {
-                outpoint.n |= COutPoint::OUTPOINT_PEGIN_FLAG;
-            }
         }
 
         // These are the same as bitcoin...
@@ -193,14 +184,10 @@ public:
             // No asset issuance for Coinbase inputs.
             fHasAssetIssuance = false;
             prevout = outpoint;
-            m_is_pegin = false;
-        } else {
+              } else {
             // The presence of the asset issuance object is indicated by
             // a bit set in the outpoint index field.
             fHasAssetIssuance = !!(outpoint.n & COutPoint::OUTPOINT_ISSUANCE_FLAG);
-            // The interpretation of this input as a peg-in is indicated by
-            // a bit set in the outpoint index field.
-            m_is_pegin = !!(outpoint.n & COutPoint::OUTPOINT_PEGIN_FLAG);
             // The mode, if set, must be masked out of the outpoint so
             // that the in-memory index field retains its traditional
             // meaning of identifying the index into the output array
