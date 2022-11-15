@@ -1189,10 +1189,7 @@ public:
         consensus.parentChainPowLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.parent_chain_signblockscript = CScript(); // It has PoW
 
-        // Default to 8, not 100, for expedited testing.
-        consensus.pegin_min_depth = DEFAULT_PEGIN_CONFIRMATION_DEPTH;
-
-        // Default fedpegscrit is OP_TRUE (tests should override it)
+         // Default fedpegscrit is OP_TRUE (tests should override it)
         consensus.fedpegScript = CScript() << OP_TRUE;
 
         // For testing purposes, default to the same junk keys that CustomParams uses (this can be overridden.)
