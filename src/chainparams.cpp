@@ -852,7 +852,6 @@ class CCustomParams : public CRegTestParams {
         assert(consensus.has_parent_chain != parent_genesis_is_null);
         consensus.parentChainPowLimit = uint256S(args.GetArg("-con_parentpowlimit", "7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
         consensus.parent_chain_signblockscript = StrHexToScriptWithDefault(args.GetArg("-con_parent_chain_signblockscript", ""), CScript());
-        consensus.pegin_min_depth = args.GetArg("-peginconfirmationdepth", DEFAULT_PEGIN_CONFIRMATION_DEPTH);
 
         const CScript default_script(CScript() << OP_TRUE);
         consensus.fedpegScript = StrHexToScriptWithDefault(args.GetArg("-fedpegscript", ""), default_script);
