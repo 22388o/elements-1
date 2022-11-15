@@ -1377,11 +1377,6 @@ public:
         if (args.IsArgSet("-con_parent_chain_signblockscript")) {
             consensus.parent_chain_signblockscript = StrHexToScriptWithDefault(args.GetArg("-con_parent_chain_signblockscript", ""), CScript());
         }
-        consensus.pegin_min_depth = args.GetArg("-peginconfirmationdepth", consensus.pegin_min_depth);
-
-        if (args.IsArgSet("-fedpegscript")) {
-            consensus.fedpegScript = StrHexToScriptWithDefault(args.GetArg("-fedpegscript", ""), CScript());
-        }
 
         consensus.total_valid_epochs = args.GetArg("-total_valid_epochs", consensus.total_valid_epochs);
 
@@ -1390,11 +1385,6 @@ public:
         uint256 entropy;
         GenerateAssetEntropy(entropy,  COutPoint(uint256(commit), 0), parentGenesisBlockHash);
         CalculateAsset(consensus.pegged_asset, entropy);
-
-        if (args.IsArgSet("-con_parent_pegged_asset")) {
-            consensus.parent_pegged_asset.SetHex(args.GetArg("-con_parent_pegged_asset", ""));
-        }
-        initial_reissuance_tokens = args.GetArg("-initialreissuancetokens", initial_reissuance_tokens);
 
         if (args.IsArgSet("-subsidyasset")) {
             consensus.subsidy_asset = CAsset(uint256S(args.GetArg("-subsidyasset", "")));
