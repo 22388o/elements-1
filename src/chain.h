@@ -352,26 +352,9 @@ public:
         hashPrev = (pprev ? pprev->GetBlockHash() : uint256());
     }
 
-    // ELEMENTS: to unmask the dynafed bit on deserialization, we call one of these
-    //  these methods from SERIALIZE_METHODS, using const-overloading to select the
-    //  right one. We cannot inline them since the body of SERIALIZE_METHODS will be
-    //  called with a const object during serialization. See Core #17850 and followups.
-    bool RemoveDynaFedMaskOnSerialize(bool for_read) {
-        if (for_read) {
-            bool is_dyna = nVersion < 0;
-            nVersion = ~CBlockHeader::DYNAFED_HF_MASK & nVersion;
-            return is_dyna;
-        } else {
-            return !dynafed_params.IsNull();
-        }
-    }
-    bool RemoveDynaFedMaskOnSerialize(bool for_read) const {
-        assert(!for_read);
-        return !dynafed_params.IsNull();
-    }
-
     SERIALIZE_METHODS(CDiskBlockIndex, obj)
     {
+        // NO MUTEX LOCK! right now
         int _nVersion = s.GetVersion();
         if (!(s.GetType() & SER_GETHASH)) READWRITE(VARINT_MODE(_nVersion, VarIntMode::NONNEGATIVE_SIGNED));
 
@@ -383,31 +366,16 @@ public:
         if (obj.nStatus & BLOCK_HAVE_UNDO) READWRITE(VARINT(obj.nUndoPos));
 
         // block header
+         READWRITE(obj.nVersion);
+         int32_t nVersion = obj.nVersion;
+         READWRITE(nVersion);
+         READWRITE(obj.hashPrev);
+         READWRITE(obj.hashMerkleRoot);
+         READWRITE(obj.nTime);
 
-        // Detect dynamic federation block serialization using "HF bit",
-        // or the signed bit which is invalid in Bitcoin
-        if (ser_action.ForRead()) {
-            READWRITE(obj.nVersion);
-        } else {
-            int32_t nVersion = obj.nVersion;
-            if (!obj.dynafed_params.IsNull()) {
-                nVersion |= CBlockHeader::DYNAFED_HF_MASK;
-            }
-            READWRITE(nVersion);
-        }
-        bool is_dyna = obj.RemoveDynaFedMaskOnSerialize(ser_action.ForRead());;
-
-        READWRITE(obj.hashPrev);
-        READWRITE(obj.hashMerkleRoot);
-        READWRITE(obj.nTime);
         // For compatibility with elements 0.14 based chains
         if (g_signed_blocks) {
-            if (is_dyna) {
-                READWRITE(obj.dynafed_params);
-                READWRITE(obj.m_signblock_witness.stack);
-            } else {
-                READWRITE(obj.proof);
-            }
+            READWRITE(obj.proof);
         } else {
             READWRITE(obj.nBits);
             READWRITE(obj.nNonce);
