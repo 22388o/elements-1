@@ -193,8 +193,6 @@ public:
     uint32_t nBits{0};
     uint32_t nNonce{0};
     CProof proof{};
-    // Dynamic federation fields
-    DynaFedParams dynafed_params{};
     CScriptWitness m_signblock_witness{};
 
     //! (memory only) Sequential id assigned to distinguish order in which blocks are received.
@@ -214,7 +212,6 @@ public:
           nBits{block.nBits},
           nNonce{block.nNonce},
           proof{block.proof},
-          dynafed_params{block.m_dynafed_params},
           m_signblock_witness{block.m_signblock_witness}
     {
     }
@@ -251,7 +248,6 @@ public:
         block.nBits          = nBits;
         block.nNonce         = nNonce;
         block.proof          = proof;
-        block.m_dynafed_params  = dynafed_params;
         block.m_signblock_witness = m_signblock_witness;
         return block;
     }
