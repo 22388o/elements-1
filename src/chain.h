@@ -427,7 +427,6 @@ public:
         block.nBits           = nBits;
         block.nNonce          = nNonce;
         block.proof           = proof;
-        block.m_dynafed_params   = dynafed_params;
         return block.GetHash();
     }
 
