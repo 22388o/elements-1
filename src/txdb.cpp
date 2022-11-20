@@ -71,11 +71,6 @@ bool CCoinsViewDB::HaveCoin(const COutPoint &outpoint) const {
     return m_db->Exists(CoinEntry(&outpoint));
 }
 
-// ELEMENTS:
-bool CCoinsViewDB::IsPeginSpent(const std::pair<uint256, COutPoint> &outpoint) const {
-    return m_db->Exists(std::make_pair(DB_PEGIN_FLAG, outpoint));
-}
-
 uint256 CCoinsViewDB::GetBestBlock() const {
     uint256 hashBestChain;
     if (!m_db->Read(DB_BEST_BLOCK, hashBestChain))
@@ -118,24 +113,11 @@ bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) {
 
     for (CCoinsMap::iterator it = mapCoins.begin(); it != mapCoins.end();) {
         if (it->second.flags & CCoinsCacheEntry::DIRTY) {
-            // ELEMENTS:
-            if (it->second.flags & CCoinsCacheEntry::PEGIN) {
-                if (!it->second.peginSpent) {
-                    batch.Erase(std::make_pair(DB_PEGIN_FLAG, it->first));
-                } else {
-                    // Once spent, we don't care about the entry data, so we store
-                    // a static byte to indicate spentness.
-                    batch.Write(std::make_pair(DB_PEGIN_FLAG, it->first), '1');
-                }
-            } else {
-                // Non-pegin entries are stored the same way as in Core.
-                CoinEntry entry(&it->first.second);
-                if (it->second.coin.IsSpent()) {
-                    batch.Erase(entry);
-                } else {
-                    batch.Write(entry, it->second.coin);
-                }
-            }
+            CoinEntry entry(&it->first.second);
+            if (it->second.coin.IsSpent())
+                batch.Erase(entry);
+            else
+                batch.Write(entry, it->second.coin);
             changed++;
         }
         count++;
