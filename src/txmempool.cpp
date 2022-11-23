@@ -552,13 +552,8 @@ void CTxMemPool::removeForReorg(CChainState& active_chainstate, int flags)
             txToRemove.insert(it);
             continue;
         }
-        for (const auto& input : tx.vin) {
-            if (input.m_is_pegin) {
-                txToRemove.insert(it);
-                break;
-            }
-        }
     }
+
     setEntries setAllRemoves;
     for (txiter it : txToRemove) {
         CalculateDescendants(it, setAllRemoves);
