@@ -26,12 +26,10 @@
 #include <node/blockstorage.h>
 #include <node/coinstats.h>
 #include <node/ui_interface.h>
-#include <pegins.h>
 #include <policy/policy.h>
 #include <policy/settings.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
-#include <script/pegins.h>
 #include <random.h>
 #include <reverse_iterator.h>
 #include <script/script.h>
@@ -265,12 +263,6 @@ bool CheckSequenceLocks(CBlockIndex* tip,
         prevheights.resize(tx.vin.size());
         for (size_t txinIndex = 0; txinIndex < tx.vin.size(); txinIndex++) {
             const CTxIn& txin = tx.vin[txinIndex];
-            // pegins should not restrict validity of sequence locks
-            if (txin.m_is_pegin) {
-                prevheights[txinIndex] = -1;
-                continue;
-            }
-
             Coin coin;
             if (!coins_view.GetCoin(txin.prevout, coin)) {
                 return error("%s: Missing input", __func__);
@@ -306,6 +298,8 @@ bool CheckSequenceLocks(CBlockIndex* tip,
                     maxInputHeight = std::max(maxInputHeight, height);
                 }
             }
+            // tip->GetAncestor(maxInputHeight) should never return a nullptr
+            // because it is less then the height of the chaintip
             lp->maxInputBlock = tip->GetAncestor(maxInputHeight);
         }
     }
