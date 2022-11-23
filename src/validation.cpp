@@ -398,10 +398,6 @@ static bool CheckInputsFromMempoolAndCache(const CTransaction& tx, TxValidationS
 
     assert(!tx.IsCoinBase());
     for (const CTxIn& txin : tx.vin) {
-        if (txin.m_is_pegin) {
-            continue;
-        }
-
         const Coin& coin = view.AccessCoin(txin.prevout);
 
         // This coin was checked in PreChecks and MemPoolAccept
@@ -679,26 +675,6 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // do all inputs exist?
     for (unsigned int i = 0; i < tx.vin.size(); i++) {
         const CTxIn& txin = tx.vin[i];
-
-        // ELEMENTS:
-        // For pegin inputs check whether the pegins have already been claimed before.
-        // This only checks the UTXO set for already claimed pegins. For mempool conflicts,
-        // we rely on the GetConflictTx check done above.
-        if (txin.m_is_pegin) {
-            // Peg-in witness is required, check here without validating existence in parent chain
-            std::string err_msg = "no peg-in witness attached";
-            if (tx.witness.vtxinwit.size() != tx.vin.size() ||
-                    !IsValidPeginWitness(tx.witness.vtxinwit[i].m_pegin_witness, fedpegscripts, tx.vin[i].prevout, err_msg, false)) {
-                return state.Invalid(TxValidationResult::TX_WITNESS_MUTATED, "pegin-no-witness", err_msg);
-            }
-
-            std::pair<uint256, COutPoint> pegin = std::make_pair(uint256(tx.witness.vtxinwit[i].m_pegin_witness.stack[2]), tx.vin[i].prevout);
-            // This assumes non-null prevout and genesis block hash
-            if (m_view.IsPeginSpent(pegin)) {
-                return state.Invalid(TxValidationResult::TX_CONSENSUS, "pegin-already-claimed");
-            }
-            continue;
-        }
 
         if (!coins_cache.HaveCoinInCache(txin.prevout)) {
             coins_to_uncache.push_back(txin.prevout);
