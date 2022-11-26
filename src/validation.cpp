@@ -654,18 +654,6 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     LockPoints lp;
     m_view.SetBackend(m_viewmempool);
 
-    // Quickly check for peg-in witness data on non-peg-in inputs
-    for (size_t input_index = 0; input_index < tx.vin.size(); ++input_index) {
-        if (!tx.vin[input_index].m_is_pegin) {
-            // Check that the corresponding pegin witness is empty
-            // Note that the witness vector must be size 0 or len(vin)
-            if (!tx.witness.vtxinwit.empty() &&
-                    !tx.witness.vtxinwit[input_index].m_pegin_witness.IsNull()) {
-                return state.Invalid(TxValidationResult::TX_WITNESS_MUTATED, "extra-pegin-witness");
-            }
-        }
-    }
-
      const CCoinsViewCache& coins_cache = m_active_chainstate.CoinsTip();
     // do all inputs exist?
     for (unsigned int i = 0; i < tx.vin.size(); i++) {
