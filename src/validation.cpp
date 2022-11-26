@@ -697,7 +697,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "non-BIP68-final");
 
     CAmountMap fee_map;
-    if (!Consensus::CheckTxInputs(tx, state, m_view, m_active_chainstate.m_blockman.GetSpendHeight(m_view), fee_map, setPeginsSpent, NULL, true, true, fedpegscripts)) {
+    if (!Consensus::CheckTxInputs(tx, state, m_view, m_active_chainstate.m_blockman.GetSpendHeight(m_view), fee_map, NULL, true, true)) {
         return false; // state filled in by CheckTxInputs
     }
 
@@ -736,10 +736,6 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // during reorgs to ensure COINBASE_MATURITY is still met.
     bool fSpendsCoinbase = false;
     for (const CTxIn &txin : tx.vin) {
-        // ELEMENTS:
-        if (txin.m_is_pegin) {
-            continue;
-        }
         const Coin &coin = m_view.AccessCoin(txin.prevout);
         if (coin.IsCoinBase()) {
             fSpendsCoinbase = true;
@@ -748,7 +744,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     }
 
     entry.reset(new CTxMemPoolEntry(ptx, ws.m_base_fees, nAcceptTime, m_active_chainstate.m_chain.Height(),
-            fSpendsCoinbase, nSigOpsCost, lp, setPeginsSpent));
+            fSpendsCoinbase, nSigOpsCost));
     unsigned int nSize = entry->GetTxSize();
 
     if (nSigOpsCost > MAX_STANDARD_TX_SIGOPS_COST)
@@ -1384,19 +1380,11 @@ void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txund
         txundo.vprevout.reserve(tx.vin.size());
         for (size_t i = 0; i < tx.vin.size(); i++) {
             const CTxIn& txin = tx.vin[i];
-            if (txin.m_is_pegin) {
-                const CTxInWitness& txinwit = tx.witness.vtxinwit[i];
-                std::pair<uint256, COutPoint> outpoint = std::make_pair(uint256(txinwit.m_pegin_witness.stack[2]), txin.prevout);
-                inputs.SetPeginSpent(outpoint, true);
-                // Dummy undo
-                txundo.vprevout.emplace_back();
-            } else {
                 txundo.vprevout.emplace_back();
                 bool is_spent = inputs.SpendCoin(txin.prevout, &txundo.vprevout.back());
                 assert(is_spent);
             }
         }
-    }
     // add outputs
     AddCoins(inputs, tx, nHeight);
 }
@@ -1789,34 +1777,12 @@ static int64_t nTimeCallbacks = 0;
 static int64_t nTimeTotal = 0;
 static int64_t nBlocksTotal = 0;
 
-bool CheckPeginRipeness(const CBlock& block, const std::vector<std::pair<CScript, CScript>>& fedpegscripts) {
-    for (unsigned int i = 0; i < block.vtx.size(); i++) {
-        const CTransaction &tx = *(block.vtx[i]);
-
-        if (!tx.IsCoinBase()) {
-            for (unsigned int i = 0; i < tx.vin.size(); ++i) {
-                if (tx.vin[i].m_is_pegin) {
-                    std::string err;
-                    bool depth_failed = false;
-                    if ((tx.witness.vtxinwit.size() <= i) || !IsValidPeginWitness(tx.witness.vtxinwit[i].m_pegin_witness, fedpegscripts, tx.vin[i].prevout, err, true, &depth_failed)) {
-                        if (depth_failed) {
-                            return false;  // Pegins not ripe.
-                        } else {
-                            return true;  // Some other failure; details later.
-                        }
-                    }
-                }
-            }
-        }
-    }
-    return true;
-}
 
 /** Apply the effects of this block (with given index) on the UTXO set represented by coins.
  *  Validity checks that depend on the UTXO set are also done; ConnectBlock()
  *  can fail if those validity checks fail (among other reasons). */
 bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
-                  CCoinsViewCache& view, std::set<std::pair<uint256, COutPoint>>* setPeginsSpent, bool fJustCheck)
+                  CCoinsViewCache& view, bool fJustCheck)
 {
     AssertLockHeld(cs_main);
     assert(pindex);
@@ -2562,12 +2528,6 @@ bool CChainState::ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew
     }
     const CBlock& blockConnecting = *pthisBlock;
 
-    const auto& fedpegscripts = GetValidFedpegScripts(pindexNew, m_params.GetConsensus(), false /* nextblock_validation */);
-    if (!CheckPeginRipeness(blockConnecting, fedpegscripts)) {
-        LogPrintf("STALLING further progress in ConnectTip while waiting for parent chain daemon to catch up! Chain will not grow until this is remedied!\n");
-        fStall = true;
-        return true;
-    }
 
     // Apply the block atomically to the chain state.
     int64_t nTime2 = GetTimeMicros(); nTimeReadFromDisk += nTime2 - nTime1;
