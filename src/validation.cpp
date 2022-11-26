@@ -474,7 +474,6 @@ private:
     struct Workspace {
         explicit Workspace(const CTransactionRef& ptx) : m_ptx(ptx), m_hash(ptx->GetHash()) {}
         std::set<uint256> m_conflicts;
-        std::set<std::pair<uint256, COutPoint> > m_set_pegins_spent;
         CTxMemPool::setEntries m_all_conflicting;
         CTxMemPool::setEntries m_ancestors;
         std::unique_ptr<CTxMemPoolEntry> m_entry;
@@ -565,7 +564,6 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     CAmount& nModifiedFees = ws.m_modified_fees;
     CAmount& nConflictingFees = ws.m_conflicting_fees;
     size_t& nConflictingSize = ws.m_conflicting_size;
-    std::set<std::pair<uint256, COutPoint> >& setPeginsSpent = ws.m_set_pegins_spent;
 
     if (!CheckTransaction(tx, state)) {
         return false; // state filled in by CheckTransaction
@@ -668,10 +666,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         }
     }
 
-    // Used when checking peg-ins
-    std::vector<std::pair<CScript, CScript>> fedpegscripts = GetValidFedpegScripts(m_active_chainstate.m_chain.Tip(), chainparams.GetConsensus(), true /* nextblock_validation */);
-
-    const CCoinsViewCache& coins_cache = m_active_chainstate.CoinsTip();
+     const CCoinsViewCache& coins_cache = m_active_chainstate.CoinsTip();
     // do all inputs exist?
     for (unsigned int i = 0; i < tx.vin.size(); i++) {
         const CTxIn& txin = tx.vin[i];
