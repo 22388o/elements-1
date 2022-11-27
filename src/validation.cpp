@@ -1477,15 +1477,7 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
 
         for (unsigned int i = 0; i < tx.vin.size(); i++) {
             const COutPoint& prevout = tx.vin[i].prevout;
-            // ELEMENTS:
-            // If input is peg-in, create "coin" to evaluate against
-            Coin pegin_coin;
-            if (tx.vin[i].m_is_pegin) {
-                // Height of "output" in script evaluation will be 0
-                pegin_coin = Coin(GetPeginOutputFromWitness(tx.witness.vtxinwit[i].m_pegin_witness), 0, false);
-            }
-            const Coin& coin = tx.vin[i].m_is_pegin ? pegin_coin : inputs.AccessCoin(prevout);
-            // end ELEMENTS
+            const Coin& coin = inputs.AccessCoin(prevout);
             assert(!coin.IsSpent());
             spent_outputs.emplace_back(coin.out);
         }
