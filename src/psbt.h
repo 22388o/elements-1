@@ -8,7 +8,6 @@
 #include <attributes.h>
 #include <chainparams.h>
 #include <node/transaction.h>
-#include <pegins.h>
 #include <policy/feerate.h>
 #include <primitives/transaction.h>
 #include <primitives/bitcoin/transaction.h>
@@ -60,12 +59,6 @@ static constexpr uint8_t PSBT_ELEMENTS_IN_ISSUANCE_VALUE = 0x00;
 static constexpr uint8_t PSBT_ELEMENTS_IN_ISSUANCE_VALUE_COMMITMENT = 0x01;
 static constexpr uint8_t PSBT_ELEMENTS_IN_ISSUANCE_VALUE_RANGEPROOF = 0x02;
 static constexpr uint8_t PSBT_ELEMENTS_IN_ISSUANCE_INFLATION_KEYS_RANGEPROOF = 0x03;
-static constexpr uint8_t PSBT_ELEMENTS_IN_PEG_IN_TX = 0x04;
-static constexpr uint8_t PSBT_ELEMENTS_IN_PEG_IN_TXOUT_PROOF = 0x05;
-static constexpr uint8_t PSBT_ELEMENTS_IN_PEG_IN_GENESIS_HASH = 0x06;
-static constexpr uint8_t PSBT_ELEMENTS_IN_PEG_IN_CLAIM_SCRIPT = 0x07;
-static constexpr uint8_t PSBT_ELEMENTS_IN_PEG_IN_VALUE = 0x08;
-static constexpr uint8_t PSBT_ELEMENTS_IN_PEG_IN_WITNESS = 0x09;
 static constexpr uint8_t PSBT_ELEMENTS_IN_ISSUANCE_INFLATION_KEYS_AMOUNT = 0x0a;
 static constexpr uint8_t PSBT_ELEMENTS_IN_ISSUANCE_INFLATION_KEYS_COMMITMENT = 0x0b;
 static constexpr uint8_t PSBT_ELEMENTS_IN_ISSUANCE_BLINDING_NONCE = 0x0c;
