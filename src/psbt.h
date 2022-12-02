@@ -248,14 +248,6 @@ struct PSBTInput
     std::vector<unsigned char> m_blind_issuance_inflation_keys_proof;
     std::optional<bool> m_blinded_issuance;
 
-    // Peg-in
-    std::variant<std::monostate, Sidechain::Bitcoin::CTransactionRef, CTransactionRef> m_peg_in_tx;
-    std::variant<std::monostate, Sidechain::Bitcoin::CMerkleBlock, CMerkleBlock> m_peg_in_txout_proof;
-    CScript m_peg_in_claim_script;
-    uint256 m_peg_in_genesis_hash;
-    std::optional<CAmount> m_peg_in_value{std::nullopt};
-    CScriptWitness m_peg_in_witness;
-
     // Auxiliary elements stuff
     std::vector<unsigned char> m_utxo_rangeproof;
     std::optional<CAmount> m_explicit_value;
@@ -372,68 +364,6 @@ struct PSBTInput
             }
 
             if (Params().GetConsensus().ParentChainHasPow()) {
-                // Peg-in tx
-                if (m_peg_in_tx.index() > 0) {
-                    const auto peg_in_tx = std::get_if<Sidechain::Bitcoin::CTransactionRef>(&m_peg_in_tx);
-                    if (peg_in_tx) {
-                        SerializeToVector(s, CompactSizeWriter(PSBT_IN_PROPRIETARY), PSBT_ELEMENTS_ID, CompactSizeWriter(PSBT_ELEMENTS_IN_PEG_IN_TX));
-                        OverrideStream<Stream> os(&s, s.GetType(), s.GetVersion() | SERIALIZE_TRANSACTION_NO_WITNESS);
-                        SerializeToVector(os, *peg_in_tx);
-                    }
-                }
-
-                // Peg-in proof
-                if (m_peg_in_txout_proof.index() > 0) {
-                    const auto txout_proof = std::get_if<Sidechain::Bitcoin::CMerkleBlock>(&m_peg_in_txout_proof);
-                    if (txout_proof) {
-                        SerializeToVector(s, CompactSizeWriter(PSBT_IN_PROPRIETARY), PSBT_ELEMENTS_ID, CompactSizeWriter(PSBT_ELEMENTS_IN_PEG_IN_TXOUT_PROOF));
-                        SerializeToVector(s, *txout_proof);
-                    }
-                }
-            } else {
-                // Peg-in tx
-                if (m_peg_in_tx.index() > 0) {
-                    const auto peg_in_tx = std::get_if<CTransactionRef>(&m_peg_in_tx);
-                    if (peg_in_tx) {
-                        SerializeToVector(s, CompactSizeWriter(PSBT_IN_PROPRIETARY), PSBT_ELEMENTS_ID, CompactSizeWriter(PSBT_ELEMENTS_IN_PEG_IN_TX));
-                        OverrideStream<Stream> os(&s, s.GetType(), s.GetVersion() | SERIALIZE_TRANSACTION_NO_WITNESS);
-                        SerializeToVector(os, *peg_in_tx);
-                    }
-                }
-
-                // Peg-in proof
-                if (m_peg_in_txout_proof.index() > 0) {
-                    const auto txout_proof = std::get_if<CMerkleBlock>(&m_peg_in_txout_proof);
-                    if (txout_proof) {
-                        SerializeToVector(s, CompactSizeWriter(PSBT_IN_PROPRIETARY), PSBT_ELEMENTS_ID, CompactSizeWriter(PSBT_ELEMENTS_IN_PEG_IN_TXOUT_PROOF));
-                        SerializeToVector(s, *txout_proof);
-                    }
-                }
-            }
-
-            // Peg-in genesis hash
-            if (!m_peg_in_genesis_hash.IsNull()) {
-                SerializeToVector(s, CompactSizeWriter(PSBT_IN_PROPRIETARY), PSBT_ELEMENTS_ID, CompactSizeWriter(PSBT_ELEMENTS_IN_PEG_IN_GENESIS_HASH));
-                SerializeToVector(s, m_peg_in_genesis_hash);
-            }
-
-            // Peg-in claim script
-            if (!m_peg_in_claim_script.empty()) {
-                SerializeToVector(s, CompactSizeWriter(PSBT_IN_PROPRIETARY), PSBT_ELEMENTS_ID, CompactSizeWriter(PSBT_ELEMENTS_IN_PEG_IN_CLAIM_SCRIPT));
-                s << m_peg_in_claim_script;
-            }
-
-            // Peg-in value
-            if (m_peg_in_value != std::nullopt) {
-                SerializeToVector(s, CompactSizeWriter(PSBT_IN_PROPRIETARY), PSBT_ELEMENTS_ID, CompactSizeWriter(PSBT_ELEMENTS_IN_PEG_IN_VALUE));
-                SerializeToVector(s, *m_peg_in_value);
-            }
-
-            // Peg-in witness
-            if (!m_peg_in_witness.IsNull()) {
-                SerializeToVector(s, CompactSizeWriter(PSBT_IN_PROPRIETARY), PSBT_ELEMENTS_ID, CompactSizeWriter(PSBT_ELEMENTS_IN_PEG_IN_WITNESS));
-                SerializeToVector(s, m_peg_in_witness.stack);
-            }
 
             // Issuance inflation keys amount
             if (m_issuance_inflation_keys_amount != std::nullopt) {
@@ -762,87 +692,7 @@ struct PSBTInput
                                 s >> m_issuance_inflation_keys_rangeproof;
                                 break;
                             }
-                            case PSBT_ELEMENTS_IN_PEG_IN_TX:
-                            {
-                                if (m_peg_in_tx.index() != 0) {
-                                    throw std::ios_base::failure("Duplicate Key, peg-in tx already provided");
-                                } else if (subkey_len != 1) {
-                                    throw std::ios_base::failure("Peg-in tx key is more than one byte type");
-                                }
-                                if (Params().GetConsensus().ParentChainHasPow()) {
-                                    Sidechain::Bitcoin::CTransactionRef tx;
-                                    OverrideStream<Stream> os(&s, s.GetType(), s.GetVersion());
-                                    UnserializeFromVector(os, tx);
-                                    m_peg_in_tx = tx;
-                                } else {
-                                    CTransactionRef tx;
-                                    OverrideStream<Stream> os(&s, s.GetType(), s.GetVersion());
-                                    UnserializeFromVector(os, tx);
-                                    m_peg_in_tx = tx;
-                                }
-                                break;
-                            }
-                            case PSBT_ELEMENTS_IN_PEG_IN_TXOUT_PROOF:
-                            {
-                                if (m_peg_in_txout_proof.index() != 0) {
-                                    throw std::ios_base::failure("Duplicate Key, peg-in txout proof already provided");
-                                } else if (subkey_len != 1) {
-                                    throw std::ios_base::failure("Peg-in txout proof key is more than one byte type");
-                                }
-                                if (Params().GetConsensus().ParentChainHasPow()) {
-                                    Sidechain::Bitcoin::CMerkleBlock tx_proof;
-                                    UnserializeFromVector(s, tx_proof);
-                                    m_peg_in_txout_proof = tx_proof;
-                                } else {
-                                    CMerkleBlock tx_proof;
-                                    UnserializeFromVector(s, tx_proof);
-                                    m_peg_in_txout_proof = tx_proof;
-                                }
-                                break;
-                            }
-                            case PSBT_ELEMENTS_IN_PEG_IN_GENESIS_HASH:
-                            {
-                                if (!m_peg_in_genesis_hash.IsNull()) {
-                                    throw std::ios_base::failure("Duplicate Key, peg-in genesis hash already provided");
-                                } else if (subkey_len != 1) {
-                                    throw std::ios_base::failure("Peg-in genesis hash is more than one byte type");
-                                }
-                                UnserializeFromVector(s, m_peg_in_genesis_hash);
-                                break;
-                            }
-                            case PSBT_ELEMENTS_IN_PEG_IN_CLAIM_SCRIPT:
-                            {
-                                if (!m_peg_in_claim_script.empty()) {
-                                    throw std::ios_base::failure("Duplicate Key, peg-in claim script already provided");
-                                } else if (subkey_len != 1) {
-                                    throw std::ios_base::failure("Peg-in claim script key is more than one byte type");
-                                }
-                                s >> m_peg_in_claim_script;
-                                break;
-                            }
-                            case PSBT_ELEMENTS_IN_PEG_IN_VALUE:
-                            {
-                                if (m_peg_in_value != std::nullopt) {
-                                    throw std::ios_base::failure("Duplicate Key, input issuance value already provided");
-                                } else if (subkey_len != 1) {
-                                    throw std::ios_base::failure("Input issuance value is more than one byte type");
-                                }
-                                CAmount amt;
-                                UnserializeFromVector(s, amt);
-                                m_peg_in_value = amt;
-                                break;
-                            }
-                            case PSBT_ELEMENTS_IN_PEG_IN_WITNESS:
-                            {
-                                if (!m_peg_in_witness.IsNull()) {
-                                    throw std::ios_base::failure("Duplicate Key, input peg-in witness already provided");
-                                } else if (subkey_len != 1) {
-                                    throw std::ios_base::failure("Input peg-in witness key is more than one byte type");
-                                }
-                                UnserializeFromVector(s, m_peg_in_witness.stack);
-                                break;
-                            }
-                            case PSBT_ELEMENTS_IN_ISSUANCE_INFLATION_KEYS_AMOUNT:
+                           case PSBT_ELEMENTS_IN_ISSUANCE_INFLATION_KEYS_AMOUNT:
                             {
                                 if (m_issuance_inflation_keys_amount != std::nullopt) {
                                     throw std::ios_base::failure("Duplicate Key, input issuance inflation keys already provided");
