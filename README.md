@@ -65,7 +65,7 @@ information or see http://opensource.org/licenses/MIT.
 [asset-issuance]: https://elementsproject.org/features/issued-assets
 [schnorr-signatures]: https://elementsproject.org/features/schnorr-signatures
 
-What is the Seuentia?
+What is the Sequentia?
 -----------------
 Sequentia is an open source, sidechain-capable blockchain platform. It also allows experiments to more rapidly bring technical innovation to the Bitcoin ecosystem.
 
