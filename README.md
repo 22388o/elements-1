@@ -3,19 +3,16 @@ Sequentia Blockchain
 
 [![Build Status](https://travis-ci.org/ElementsProject/elements.svg?branch=master)](https://travis-ci.org/ElementsProject/elements)
 
-https://elementsproject.org
 
 This is the integration and staging tree for the Sequentia blockchain platform,
 a collection of feature experiments and extensions to the Bitcoin protocol.
-This platform enables anyone to build their own businesses or networks
-pegged to Bitcoin as a sidechain or run as a standalone blockchain with arbitrary asset tokens.
 
 Modes
 -----
 
 Elements supports a few different pre-set chains for syncing. Note though some are intended for QA and debugging only:
 
-* Liquid mode: `elementsd -chain=liquidv1` (syncs with Liquid network)
+* Sequentia mode: `elementsd -chain=sequentiav1` (syncs with Sequentia network)
 * Bitcoin mainnet mode: `elementsd -chain=main` (not intended to be run for commerce)
 * Bitcoin testnet mode: `elementsd -chain=testnet3`
 * Bitcoin regtest mode: `elementsd -chain=regtest`
@@ -68,15 +65,9 @@ information or see http://opensource.org/licenses/MIT.
 [asset-issuance]: https://elementsproject.org/features/issued-assets
 [schnorr-signatures]: https://elementsproject.org/features/schnorr-signatures
 
-What is the Elements Project?
+What is the Seuentia?
 -----------------
-Elements is an open source, sidechain-capable blockchain platform. It also allows experiments to more rapidly bring technical innovation to the Bitcoin ecosystem.
+Sequentia is an open source, sidechain-capable blockchain platform. It also allows experiments to more rapidly bring technical innovation to the Bitcoin ecosystem.
 
-Learn more on the [Elements Project website](https://elementsproject.org)
-
-https://github.com/ElementsProject/elementsproject.github.io
-
-Secure Reporting
-------------------
-See [our vulnerability reporting guide](SECURITY.md)
+Learn more on the [Sequentia website](https://sequentia.io)
 
