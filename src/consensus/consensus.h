@@ -6,6 +6,9 @@
 #ifndef BITCOIN_CONSENSUS_CONSENSUS_H
 #define BITCOIN_CONSENSUS_CONSENSUS_H
 
+#ifdef PROOF_OF_STAKE _ CONSENSUS_H 
+#define  PROOF_OF_STAKE_CONSENSUS_H 
+
 #include <stdlib.h>
 #include <stdint.h>
 
