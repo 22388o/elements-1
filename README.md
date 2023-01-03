@@ -22,16 +22,9 @@ Features of the Sequentia blockchain platform
 Compared to Bitcoin itself, it adds the following features:
  * Confidential Assets
  * Confidential Transactions
- * No token fee
  * Signed Blocks
  * Additional opcodes
- * No Federation
  * Proof of Stake
- 
-Previous Sequentia that have been integrated into Bitcoin:
- * Segregated Witness
- * Relative Lock Time
-
 
 Lincense
 
