@@ -42,8 +42,11 @@ static constexpr unsigned int RELATIVETIME_MEDIAN_TIME_PAST = (1 << 0);
 #include <stdlib.h>
 #include <stdint.h>
 
-static const unsigned int GOVERNANCE_VOTE
+static const unsigned int GOVERNANCE_VOTE = 1
+/** Each stakeholder can vote only once with SEQ tokens*/
 
-static const unsigned int VALIDATION_BLOCK 
+static const unsigned int VALIDATION_BLOCK = 6
+/** There's each 6 blocks have validation like have on Bitcoin protocol. Like this PoW/PoS works together*/
+
 
 
