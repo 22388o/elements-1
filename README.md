@@ -10,10 +10,10 @@ Modes
 
 Elements supports a few different pre-set chains for syncing. Note though some are intended for QA and debugging only:
 
-* Sequentia mode: `elementsd -chain=sequentiav1` (syncs with Sequentia network)
-* Bitcoin mainnet mode: `sequentiasd -chain=main` (not intended to be run for commerce)
-* Bitcoin testnet mode: `sequentiasd -chain=testnet3`
-* Bitcoin regtest mode: `sequentiasd -chain=regtest`
+* Sequentia mode: `sequentiad -chain=sequentiav1` (syncs with Sequentia network)
+* Bitcoin mainnet mode: `sequentiad -chain=main` (not intended to be run for commerce)
+* Bitcoin testnet mode: `sequentiad-chain=testnet3`
+* Bitcoin regtest mode: `sequentiad -chain=regtest`
 * Sequentia custom chains: Any other `-chain=` argument. It has regtest-like default parameters that can be over-ridden by the user by a rich set of start-up options.
 
 Features of the Sequentia blockchain platform
