@@ -51,8 +51,7 @@ static const unsigned int VALIDATION_BLOCK = 6
 static const int GOVERNANCE_VOTE = 1
 static const int VALIDATION_BLOCK = 6
    
-static const size_t
-static const size_t 
-    
+static const size_t IN_TRANSACTION_WEIGHT = WITNESS_SCALE_FACTOR * 80; // 80 is the lower bound for the size of a valid serialized CTransaction
+static const size_t MIN_SERIALIZABLE_TRANSACTION_WEIGHT = WITNESS_SCALE_FACTOR * 20; // 10 is the lower bound for the size of a serialized CTransaction    
 
 
