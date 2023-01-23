@@ -42,6 +42,17 @@ static constexpr unsigned int RELATIVETIME_MEDIAN_TIME_PAST = (1 << 0);
 #include <stdlib.h>
 #include <stdint.h>
 
+/** The maximum allowed size for a serialized block, in bytes (only for buffer size limits) */
+static const unsigned int MAX_BLOCK_SERIALIZED_SIZE = 6000000;
+/** The maximum allowed weight for a block, see BIP 141 (network rule) */
+static const unsigned int MAX_BLOCK_WEIGHT = 4000000;
+/** The maximum allowed number of signature check operations in a block (network rule) */
+static const int64_t MAX_BLOCK_SIGOPS_COST = 90000;
+/** Coinbase transaction outputs can only be spent after this number of new blocks (network rule) */
+static const int COINBASE_MATURITY = 200;
+
+static const int WITNESS_SCALE_FACTOR = 4;
+
 static const unsigned int GOVERNANCE_VOTE = 1
 /** Each stakeholder can vote only once with SEQ tokens*/
 
@@ -53,5 +64,7 @@ static const int VALIDATION_BLOCK = 6
    
 static const size_t IN_TRANSACTION_WEIGHT = WITNESS_SCALE_FACTOR * 80; // 80 is the lower bound for the size of a valid serialized CTransaction
 static const size_t MIN_SERIALIZABLE_TRANSACTION_WEIGHT = WITNESS_SCALE_FACTOR * 20; // 10 is the lower bound for the size of a serialized CTransaction    
+
+#endif // PROOF_OF_STAKE_CONSENSUS_H
 
 
