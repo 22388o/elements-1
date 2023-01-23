@@ -49,6 +49,10 @@ static const unsigned int VALIDATION_BLOCK = 6
 /** There's each 6 blocks have validation like have on Bitcoin protocol. Like this PoW/PoS works together*/
 
 static const int GOVERNANCE_VOTE = 1
+static const int VALIDATION_BLOCK = 6
+   
+static const size_t
+static const size_t 
     
 
 
