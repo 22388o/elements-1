@@ -192,10 +192,53 @@ public:
     uint32_t nTime{0};
     uint32_t nBits{0};
     uint32_t nNonce{0};
-    CProof proof{};
+    protected:
+    std::optional<CProof> proof{};
+    // Dynamic federation fields
     // Dynamic federation fields
     DynaFedParams dynafed_params{};
+    std::optional<DynaFedParams> m_dynafed_params{};
     CScriptWitness m_signblock_witness{};
+    std::optional<CScriptWitness> m_signblock_witness{};
+
+    bool m_trimmed{false};
+
+    friend class CBlockTreeDB;
+
+public:
+
+    // Irrevocably remove blocksigning and dynafed-related stuff from this
+    // in-memory copy of the block header.
+    void trim() {
+        assert_untrimmed();
+        m_trimmed = true;
+        proof = std::nullopt;
+        m_dynafed_params = std::nullopt;
+        m_signblock_witness = std::nullopt;
+    }
+
+    bool trimmed() const {
+        return m_trimmed;
+    }
+
+    void assert_untrimmed() const {
+        assert(!m_trimmed);
+    }
+
+    const CProof& get_proof() const {
+        assert_untrimmed();
+        return proof.value();
+    }
+
+    const DynaFedParams& dynafed_params() const {
+        assert_untrimmed();
+        return m_dynafed_params.value();
+    }
+
+    const CScriptWitness& signblock_witness() const {
+        assert_untrimmed();
+        return m_signblock_witness.value();
+    }
 
     //! (memory only) Sequential id assigned to distinguish order in which blocks are received.
     int32_t nSequenceId{0};
