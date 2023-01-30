@@ -257,7 +257,7 @@ public:
           nBits{block.nBits},
           nNonce{block.nNonce},
           proof{block.proof},
-          dynafed_params{block.m_dynafed_params},
+          m_dynafed_params{block.m_dynafed_params},
           m_signblock_witness{block.m_signblock_witness}
     {
     }
