@@ -74,7 +74,7 @@ static const unsigned int EXTRA_DESCENDANT_TX_SIZE_LIMIT = 10000;
 /** Maximum kilobytes for transactions to store for processing during reorg */
 static const unsigned int MAX_DISCONNECTED_TX_POOL_SIZE = 20000;
 /** Time to wait between writing blocks/block index to disk. */
-static constexpr std::chrono::hours DATABASE_WRITE_INTERVAL{1};
+static constexpr std::chrono::minutes DATABASE_WRITE_INTERVAL{5};
 /** Time to wait between flushing chainstate to disk. */
 static constexpr std::chrono::hours DATABASE_FLUSH_INTERVAL{24};
 /** Maximum age of our tip for us to be considered current for fee estimation */
