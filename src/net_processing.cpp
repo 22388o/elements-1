@@ -48,7 +48,7 @@ static constexpr auto UNCONDITIONAL_RELAY_DELAY = 2min;
 /** Headers download timeout.
  *  Timeout = base + per_header * (expected number of headers) */
 static constexpr auto HEADERS_DOWNLOAD_TIMEOUT_BASE = 15min;
-static constexpr auto HEADERS_DOWNLOAD_TIMEOUT_PER_HEADER = 1ms;
+static constexpr auto HEADERS_DOWNLOAD_TIMEOUT_PER_HEADER = 2ms;
 /** Protect at least this many outbound peers from disconnection due to slow/
  * behind headers chain.
  */
@@ -908,8 +908,12 @@ bool PeerManagerImpl::TipMayBeStale()
     return m_last_tip_update < GetTime() - consensusParams.nPowTargetSpacing * 3 && mapBlocksInFlight.empty();
 }
 
-bool PeerManagerImpl::CanDirectFetch()
+bool PeerManagerImpl::CanDirectFetch(
 {
+  if(!m_chainman.ActiveChain().Tip()) {
+        LogPrint(BCLog::NET, "Tried to call CanDirectFetch with no currently-active chain.\n");
+        return false;
+    }
     return m_chainman.ActiveChain().Tip()->GetBlockTime() > GetAdjustedTime() - m_chainparams.GetConsensus().nPowTargetSpacing * 20;
 }
 
