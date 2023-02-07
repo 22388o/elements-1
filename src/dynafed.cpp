@@ -15,7 +15,7 @@ bool NextBlockIsParameterTransition(const CBlockIndex* pindexPrev, const Consens
     for (int32_t height = next_height - 1; height >= (int32_t)(next_height - consensus.dynamic_epoch_length); --height) {
         const CBlockIndex* p_epoch_walk = pindexPrev->GetAncestor(height);
         assert(p_epoch_walk);
-        const DynaFedParamEntry& proposal = p_epoch_walk->dynafed_params.m_proposed;
+        const DynaFedParamEntry& proposal = p_epoch_walk->dynafed_params().m_proposed;        
         const uint256 proposal_root = proposal.CalculateRoot();
         vote_tally[proposal_root]++;
         // Short-circuit once 4/5 threshold is reached
@@ -56,13 +56,13 @@ DynaFedParamEntry ComputeNextBlockFullCurrentParameters(const CBlockIndex* pinde
     // may be pre-dynafed params
     const CBlockIndex* p_epoch_start = pindexPrev->GetAncestor(epoch_start_height);
     assert(p_epoch_start);
-    if (p_epoch_start->dynafed_params.IsNull()) {
+    if (p_epoch_start->dynafed_params().IsNull()) {       
         // We need to construct the "full" current parameters of pre-dynafed
         // consensus
 
         // Convert signblockscript to P2WSH
         uint256 signblock_witness_program;
-        CSHA256().Write(p_epoch_start->proof.challenge.data(), p_epoch_start->proof.challenge.size()).Finalize(signblock_witness_program.begin());
+        CSHA256().Write(p_epoch_start->get_proof().challenge.data(), p_epoch_start->get_proof.challenge().size()).Finalize(signblock_witness_program.begin());
         CScript p2wsh_signblock_script = CScript() << OP_0 << ToByteVector(signblock_witness_program);
 
         // Make P2SH-P2WSH-ness of non-dynafed fedpegscript explicit
