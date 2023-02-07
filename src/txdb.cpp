@@ -285,9 +285,45 @@ bool CBlockTreeDB::ReadPAKList(std::vector<std::vector<unsigned char> >& offline
 bool CBlockTreeDB::WritePAKList(const std::vector<std::vector<unsigned char> >& offline_list, const std::vector<std::vector<unsigned char> >& online_list, bool reject)
 {
         return Write(std::make_pair(DB_PAK, uint256S("1")), offline_list) && Write(std::make_pair(DB_PAK, uint256S("2")), online_list) && Write(std::make_pair(DB_PAK, uint256S("3")), reject);
+    
 }
 
-bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, std::function<CBlockIndex*(const uint256&)> insertBlockIndex)
+/** Note that we only get a conservative (lower) estimate of the max header height here,
+ * obtained by sampling the first 10,000 headers on disk (which are in random order) and
+ * taking the highest block we see. */
+bool CBlockTreeDB::WalkBlockIndexGutsForMaxHeight(int* nHeight) {
+    std::unique_ptr<CDBIterator> pcursor(NewIterator());
+    *nHeight = 0;
+    int i = 0;
+    pcursor->Seek(std::make_pair(DB_BLOCK_INDEX, uint256()));
+    while (pcursor->Valid()) {
+        if (ShutdownRequested()) return false;
+        std::pair<uint8_t, uint256> key;
+        if (pcursor->GetKey(key) && key.first == DB_BLOCK_INDEX) {
+            i++;
+            if (i > 10'000) {
+                // Under the (accurate) assumption that the headers on disk are effectively in random height order,
+                //   we have a good-enough (conservative) estimate of the max height very quickly, and don't need to
+                //   waste more time. Shortcutting like this will cause us to keep a few extra headers, which is fine.
+                break;
+            }
+            CDiskBlockIndex diskindex;
+            if (pcursor->GetValue(diskindex)) {
+                if (diskindex.nHeight > *nHeight) {
+                    *nHeight = diskindex.nHeight;
+                }
+                pcursor->Next();
+            } else {
+                return error("%s: failed to read value", __func__);
+            }
+        } else {
+            break;
+        }
+    }
+    return true;
+}
+
+bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, std::function<CBlockIndex*(const uint256&)> insertBlockIndex, int trimBelowHeight)
 {
     std::unique_ptr<CDBIterator> pcursor(NewIterator());
 
