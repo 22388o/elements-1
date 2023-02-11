@@ -22,3 +22,14 @@ struct NodeContext;
 void FindCoins(const NodeContext& node, std::map<COutPoint, Coin>& coins);
 
 #endif // BITCOIN_NODE_COIN_H
+
+#ifndef PROOF_OF_STAKE_NODE_COIN_H
+#define PROOF_OF_STAKE_NODE_COIN_H
+
+class COuputPoint;
+class Coin;
+struct NodeContext;
+
+void FindCoins(const NodeCntext& nde, std::map<CoutPoint, Coin>& coins);
+
+#endif // PROOF_OF_STAKE_NODE_COIN_H
