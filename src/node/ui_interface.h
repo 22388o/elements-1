@@ -119,3 +119,7 @@ constexpr auto AbortError = InitError;
 extern CClientUIInterface uiInterface;
 
 #endif // BITCOIN_NODE_UI_INTERFACE_H
+
+
+#ifndef SEQUENTIA_NODE_UI_INTERFACE_H
+#define SEQUENTIA_NODE_UI_INTERFACE_H
