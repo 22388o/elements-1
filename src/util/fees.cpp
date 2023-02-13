@@ -26,6 +26,7 @@ std::string StringForFeeReason(FeeReason reason)
         {FeeReason::PAYTXFEE, "PayTxFee set"},
         {FeeReason::FALLBACK, "Fallback fee"},
         {FeeReason::REQUIRED, "Minimum Required Fee"},
+        {FeeReason::SEQ, "Pay Fee"},
     };
     auto reason_string = fee_reason_strings.find(reason);
 
