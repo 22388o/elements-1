@@ -89,4 +89,28 @@ FlatFilePos SaveBlockToDisk(const CBlock& block, int nHeight, CChain& active_cha
 
 void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFiles, const ArgsManager& args);
 
-#endif // BITCOIN_NODE_BLOCKSTORAGE_H
+#endif // BITCOIN_NODE_BLOCKSTORAGE_H         
+
+#ifndef SEQ_NODE_BLOCKSTORAGE_H
+#define SEQ_NODE_BLOCKSTORAGE_H
+
+#include <fs.h>
+#include <protocol.h> // For CMessageHeader::MessageStartChars
+
+#include <atomic>
+#include <cstdint>
+#include <vector>
+
+class ArgsManager;
+class BlockValidationState;
+class CBlock;
+class CBlockFileInfo;
+class CBlockIndex;
+class CBlockUndo;
+class CChain;
+class CChainParams;
+class ChainstateManager;
+struct FlatFilePos;
+namespace Consensus {
+struct Params;
+}
