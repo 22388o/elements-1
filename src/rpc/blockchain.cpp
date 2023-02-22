@@ -42,7 +42,11 @@
 #include <validationinterface.h>
 #include <versionbits.h>
 #include <warnings.h>
+<pegin_removal
 #include <dynafed.h>
+=======
+#include <pegins.h>
+> master
 
 #include <stdint.h>
 
@@ -180,13 +184,6 @@ UniValue paramEntryToJSON(const DynaFedParamEntry& entry)
     return result;
 }
 
-UniValue dynaParamsToJSON(const DynaFedParams& dynafed_params)
-{
-    UniValue ret(UniValue::VOBJ);
-    ret.pushKV("current", paramEntryToJSON(dynafed_params.m_current));
-    ret.pushKV("proposed", paramEntryToJSON(dynafed_params.m_proposed));
-    return ret;
-}
 
 static int ComputeNextBlockAndDepth(const CBlockIndex* tip, const CBlockIndex* blockindex, const CBlockIndex*& next)
 {
