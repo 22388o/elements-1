@@ -649,6 +649,7 @@ public:
     //! @returns A reference to the in-memory cache of the UTXO set.
     CCoinsViewCache& CoinsTip() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
     {
+        assert(m_coins_views);
         assert(m_coins_views->m_cacheview);
         return *m_coins_views->m_cacheview.get();
     }
@@ -729,8 +730,9 @@ public:
 
     // Block (dis)connection on a given view:
     DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view);
+    // std::set<std::pair<unit256> assetPair removed
     bool ConnectBlock(const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
-                      CCoinsViewCache& view, std::set<std::pair<uint256, COutPoint>>* setPeginsSpent, bool fJustCheck = false) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+                      CCoinsViewCache& view, bool fJustCheck = false) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     // Apply the effects of a block disconnection on the UTXO set.
     bool DisconnectTip(BlockValidationState& state, DisconnectedBlockTransactions* disconnectpool) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_mempool->cs);

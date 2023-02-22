@@ -30,8 +30,6 @@ static constexpr uint8_t DB_FLAG{'F'};
 static constexpr uint8_t DB_REINDEX_FLAG{'R'};
 static constexpr uint8_t DB_LAST_BLOCK{'l'};
 
-// ELEMENTS:
-static const char DB_PEGIN_FLAG = 'w';
 // static const char DB_INVALID_BLOCK_Q = 'q';  // No longer used, but avoid reuse.
 static const char DB_PAK = 'p';
 
@@ -71,11 +69,6 @@ bool CCoinsViewDB::GetCoin(const COutPoint &outpoint, Coin &coin) const {
 
 bool CCoinsViewDB::HaveCoin(const COutPoint &outpoint) const {
     return m_db->Exists(CoinEntry(&outpoint));
-}
-
-// ELEMENTS:
-bool CCoinsViewDB::IsPeginSpent(const std::pair<uint256, COutPoint> &outpoint) const {
-    return m_db->Exists(std::make_pair(DB_PEGIN_FLAG, outpoint));
 }
 
 uint256 CCoinsViewDB::GetBestBlock() const {
@@ -120,24 +113,11 @@ bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) {
 
     for (CCoinsMap::iterator it = mapCoins.begin(); it != mapCoins.end();) {
         if (it->second.flags & CCoinsCacheEntry::DIRTY) {
-            // ELEMENTS:
-            if (it->second.flags & CCoinsCacheEntry::PEGIN) {
-                if (!it->second.peginSpent) {
-                    batch.Erase(std::make_pair(DB_PEGIN_FLAG, it->first));
-                } else {
-                    // Once spent, we don't care about the entry data, so we store
-                    // a static byte to indicate spentness.
-                    batch.Write(std::make_pair(DB_PEGIN_FLAG, it->first), '1');
-                }
-            } else {
-                // Non-pegin entries are stored the same way as in Core.
-                CoinEntry entry(&it->first.second);
-                if (it->second.coin.IsSpent()) {
-                    batch.Erase(entry);
-                } else {
-                    batch.Write(entry, it->second.coin);
-                }
-            }
+            CoinEntry entry(&it->first.second);
+            if (it->second.coin.IsSpent())
+                batch.Erase(entry);
+            else
+                batch.Write(entry, it->second.coin);
             changed++;
         }
         count++;
@@ -305,9 +285,45 @@ bool CBlockTreeDB::ReadPAKList(std::vector<std::vector<unsigned char> >& offline
 bool CBlockTreeDB::WritePAKList(const std::vector<std::vector<unsigned char> >& offline_list, const std::vector<std::vector<unsigned char> >& online_list, bool reject)
 {
         return Write(std::make_pair(DB_PAK, uint256S("1")), offline_list) && Write(std::make_pair(DB_PAK, uint256S("2")), online_list) && Write(std::make_pair(DB_PAK, uint256S("3")), reject);
+    
 }
 
-bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, std::function<CBlockIndex*(const uint256&)> insertBlockIndex)
+/** Note that we only get a conservative (lower) estimate of the max header height here,
+ * obtained by sampling the first 10,000 headers on disk (which are in random order) and
+ * taking the highest block we see. */
+bool CBlockTreeDB::WalkBlockIndexGutsForMaxHeight(int* nHeight) {
+    std::unique_ptr<CDBIterator> pcursor(NewIterator());
+    *nHeight = 0;
+    int i = 0;
+    pcursor->Seek(std::make_pair(DB_BLOCK_INDEX, uint256()));
+    while (pcursor->Valid()) {
+        if (ShutdownRequested()) return false;
+        std::pair<uint8_t, uint256> key;
+        if (pcursor->GetKey(key) && key.first == DB_BLOCK_INDEX) {
+            i++;
+            if (i > 10'000) {
+                // Under the (accurate) assumption that the headers on disk are effectively in random height order,
+                //   we have a good-enough (conservative) estimate of the max height very quickly, and don't need to
+                //   waste more time. Shortcutting like this will cause us to keep a few extra headers, which is fine.
+                break;
+            }
+            CDiskBlockIndex diskindex;
+            if (pcursor->GetValue(diskindex)) {
+                if (diskindex.nHeight > *nHeight) {
+                    *nHeight = diskindex.nHeight;
+                }
+                pcursor->Next();
+            } else {
+                return error("%s: failed to read value", __func__);
+            }
+        } else {
+            break;
+        }
+    }
+    return true;
+}
+
+bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, std::function<CBlockIndex*(const uint256&)> insertBlockIndex, int trimBelowHeight)
 {
     std::unique_ptr<CDBIterator> pcursor(NewIterator());
 

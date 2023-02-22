@@ -42,7 +42,11 @@
 #include <validationinterface.h>
 #include <versionbits.h>
 #include <warnings.h>
+<pegin_removal
+#include <dynafed.h>
+=======
 #include <pegins.h>
+> master
 
 #include <stdint.h>
 
@@ -240,13 +244,27 @@ UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex
         result.pushKV("difficulty", GetDifficulty(blockindex));
         result.pushKV("chainwork", blockindex->nChainWork.GetHex());
     } else {
-        if (blockindex->dynafed_params.IsNull()) {
-            result.pushKV("signblock_witness_asm", ScriptToAsmStr(blockindex->proof.solution));
-            result.pushKV("signblock_witness_hex", HexStr(blockindex->proof.solution));
-        } else {
-            result.pushKV("signblock_witness_hex", EncodeHexScriptWitness(blockindex->m_signblock_witness));
-            result.pushKV("dynamic_parameters", dynaParamsToJSON(blockindex->dynafed_params));
-        }
+        if (blockindex->dynafed_params().IsNull()) {
+            if (blockindex->trimmed()) {
+                result.pushKV("signblock_witness_asm", "<trimmed>");
+                result.pushKV("signblock_witness_hex", "<trimmed>");
+                result.pushKV("signblock_challenge", "<trimmed>");
+                result.pushKV("warning", "Fields missing due to -trim_headers flag.");
+            } else {
+                result.pushKV("signblock_witness_asm", ScriptToAsmStr(blockindex->get_proof().solution));
+                result.pushKV("signblock_witness_hex", HexStr(blockindex->get_proof().solution));
+                result.pushKV("signblock_challenge", HexStr(blockindex->get_proof().challenge));
+            }
+            } else {
+            if (blockindex->trimmed()) {
+                result.pushKV("signblock_witness_hex", "<trimmed>");
+                result.pushKV("dynamic_parameters", "<trimmed>");
+                result.pushKV("warning", "Fields missing due to -trim_headers flag.");
+            } else {
+                result.pushKV("signblock_witness_hex", EncodeHexScriptWitness(blockindex->signblock_witness()));
+                result.pushKV("dynamic_parameters", dynaParamsToJSON(blockindex->dynafed_params()));
+            }
+           
     }
     result.pushKV("nTx", (uint64_t)blockindex->nTx);
     if (blockindex->pprev)
@@ -2861,7 +2879,6 @@ static RPCHelpMan getsidechaininfo()
                         {RPCResult::Type::STR, "parent_chain_signblockscript_asm", "If the parent chain has signed blocks, its signblockscript in ASM"},
                         {RPCResult::Type::STR_HEX, "parent_chain_signblockscript_hex", "If the parent chain has signed blocks, its signblockscript in hex"},
                         {RPCResult::Type::STR_HEX, "parent_pegged_asset", "If the parent chain has Confidential Assets, the asset id of the pegged asset in that chain"},
-                        {RPCResult::Type::NUM, "pegin_confirmation_depth", "The number of mainchain confirmations required for a peg-in transaction to become valid"},
                         {RPCResult::Type::BOOL, "enforce_pak", "If peg-out authorization is being enforced"},
                     }},
                 RPCExamples{
@@ -2894,8 +2911,7 @@ static RPCHelpMan getsidechaininfo()
     obj.pushKV("parent_blockhash", parent_blockhash.GetHex());
     obj.pushKV("parent_chain_has_pow", consensus.ParentChainHasPow());
     obj.pushKV("enforce_pak", Params().GetEnforcePak());
-    obj.pushKV("pegin_confirmation_depth", (uint64_t)consensus.pegin_min_depth);
-    if (!consensus.ParentChainHasPow()) {
+        if (!consensus.ParentChainHasPow()) {
         obj.pushKV("parent_chain_signblockscript_asm", ScriptToAsmStr(consensus.parent_chain_signblockscript));
         obj.pushKV("parent_chain_signblockscript_hex", HexStr(consensus.parent_chain_signblockscript));
         obj.pushKV("parent_pegged_asset", consensus.parent_pegged_asset.GetHex());

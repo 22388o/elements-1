@@ -146,7 +146,14 @@ enum opcodetype
     OP_EQUALVERIFY = 0x88,
     OP_RESERVED1 = 0x89,
     OP_RESERVED2 = 0x8a,
-
+    
+    // stack
+    
+    OP_SWAP = 0x7c,
+    OP_2SWAP = 0x72,
+    OP_TOALTSTACK = 0X6b,
+    OP_FROMALTSTACK = 0x6c,
+        
     // numeric
     OP_1ADD = 0x8b,
     OP_1SUB = 0x8c,
@@ -211,6 +218,7 @@ enum opcodetype
     OP_NOP8 = 0xb7,
     OP_NOP9 = 0xb8,
     OP_NOP10 = 0xb9,
+    
 
     // Opcode added by BIP 342 (Tapscript)
     OP_CHECKSIGADD = 0xba,
